@@ -155,7 +155,7 @@ void Hal::keyboard_init()
 #include <sys/time.h>
 #include <esp_sntp.h>
 
-#define DEFAULT_SCAN_LIST_SIZE 6
+#define DEFAULT_SCAN_LIST_SIZE 32
 static wifi_ap_record_t _ap_info[DEFAULT_SCAN_LIST_SIZE];
 
 void Hal::wifiScan(std::vector<ScanResult_t>& scanResult)
@@ -198,14 +198,12 @@ void Hal::wifiScan(std::vector<ScanResult_t>& scanResult)
         }
 
         // Add to ap_list
-        scanResult.push_back(std::make_pair(rssi, ssid));
+        scanResult.push_back({ssid, rssi, static_cast<uint8_t>(_ap_info[i].authmode)});
     }
 
     // Sort ap_list by RSSI (from strongest to weakest)
     std::sort(scanResult.begin(), scanResult.end(),
-              [](const std::pair<int, std::string>& a, const std::pair<int, std::string>& b) {
-                  return a.first > b.first;  // Higher RSSI first
-              });
+              [](const ScanResult_t& a, const ScanResult_t& b) { return a.rssi > b.rssi; });
 
     mclog::tagInfo(_tag, "wifi scan completed, found {} APs", scanResult.size());
 }
@@ -285,7 +283,7 @@ void Hal::wifiDeinit()
 
 bool Hal::wifiConnect(const std::string& ssid, const std::string& password)
 {
-    mclog::tagInfo(_tag, "wifi connect to ssid: {} password: {}", ssid, password);
+    mclog::tagInfo(_tag, "wifi connect to ssid: {}", ssid);
 
     if (!_is_wifi_inited) {
         wifiInit();
@@ -725,9 +723,11 @@ void Hal::sd_card_init()
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
     // Options for mounting the filesystem
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024,
-        .disk_status_check_enable = false, .use_one_fat = false};
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed   = false,
+                                                     .max_files                = 5,
+                                                     .allocation_unit_size     = 16 * 1024,
+                                                     .disk_status_check_enable = false,
+                                                     .use_one_fat              = false};
 
     const char mount_point[] = MOUNT_POINT;
     mclog::tagInfo(_tag, "initializing SD card");

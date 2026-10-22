@@ -16,6 +16,23 @@
 namespace audio {
 
 static bool quiet_mode_is_enabled = false;
+static int current_volume         = DEFAULT_VOLUME;
+
+void set_volume(int volume)
+{
+    if (volume < 0) {
+        volume = 0;
+    } else if (volume > 255) {
+        volume = 255;
+    }
+    current_volume = volume;
+    GetHAL().speaker.setVolume(current_volume);
+}
+
+int get_volume()
+{
+    return current_volume;
+}
 
 static std::vector<int> c_major_scale = {60, 62, 64, 65, 67, 69, 71};  // C大调音阶（C D E F G A B）
 
@@ -123,8 +140,6 @@ static void _keyboard_sfx_on_key_event(const Keyboard::KeyEvent_t& event)
     if (!event.state || is_quiet_mode()) {
         return;
     }
-
-    GetHAL().speaker.setVolume(DEFAULT_VOLUME);
 
     int semitoneShift = 48;
     switch (event.keyCode) {

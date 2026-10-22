@@ -66,7 +66,11 @@ public:
     }
 
     /* ---------------------------------- WiFi ---------------------------------- */
-    using ScanResult_t = std::pair<int, std::string>;
+    struct ScanResult_t {
+        std::string ssid;
+        int rssi         = 0;
+        uint8_t authmode = 0;  // 0 == WIFI_AUTH_OPEN
+    };
     void wifiInit();
     void wifiDeinit();
     void wifiScan(std::vector<ScanResult_t>& scanResult);

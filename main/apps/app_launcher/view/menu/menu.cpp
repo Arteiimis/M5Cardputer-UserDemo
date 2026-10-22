@@ -85,6 +85,7 @@ void LauncherMenu::onReadInput()
             bool new_quiet = !audio::is_quiet_mode();
             audio::set_quiet_mode(new_quiet);
             GetHAL().getSettings().SetBool("quiet_mode", new_quiet);
+            GetHAL().getSettings().Commit();
         }
     }
     // Key released
